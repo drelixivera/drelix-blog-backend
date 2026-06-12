@@ -16,23 +16,31 @@ const auth = require('./middleware/auth'); // import the authentication middlewa
 app.use(express.json()); // this allows the server to understand JSON data sent from the frontend 
  
 // Dynamic CORS configuration
- const allowedOrigins = [
-    'http://localhost:3000', // React development server
+const allowedOrigins = [
+    'http://localhost:3000',
     process.env.FRONTEND_URL
- ];
+];
 
- app.use(cors({
+app.use(cors({
     origin: function (origin, callback) {
+         
         if (!origin) return callback(null, true);
+        
+        const sanitizedOrigin = origin.replace(/\/$/, "");
+        const isAllowed = allowedOrigins.some(baseUrl => {
+            if (!baseUrl) return false;
+            return baseUrl.replace(/\/$/, "") === sanitizedOrigin;
+        });
 
-        if (allowedOrigins.indexOf(origin) === -1) {
-            const msg = 'The CORS policy for this site does not allow from the specified Origin';
-            return callback(new Error(msg), false);
+        if (isAllowed || sanitizedOrigin.endsWith('.vercel.app')) {
+            return callback(null, true);
+        } else {
+            console.error(`Blocked by CORS: ${origin}`);
+            return callback(new Error('The CORS policy for this site does not allow from the specified Origin'), false);
         }
-        return callback(null, true);
-    }, 
+    },
     credentials: true
- }));
+}));
  
 
 //============
