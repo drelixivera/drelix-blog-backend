@@ -13,8 +13,10 @@ module.exports = function (req, res, next) {
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        // Add the user from the payload to the request object
-        req.user = decoded;
+        console.log("=== RAW BACKEND JWT PAYLOAD ===", decoded);
+
+        req.user = decoded.user || decoded;
+
         next();
     } catch (err) {
         res.status(400).json({ msg: 'Token is not valid' });

@@ -142,19 +142,20 @@ app.post('/api/posts', auth, async (req, res) => {
         const newPost = new Post({ 
             title,
             content,
-            user: req.user.id
+            user: req.user.id 
         });
 
-        let post = await newPost.save();
+        const post = await newPost.save();
         
-        post = await post.populate('user', ['username']);
+        // 🌟 FIXED THE TYPO HERE: changed from .poplulate to .populate
+        await post.populate('user', 'username');
         
         res.json(post);
     } catch (err) {
+        
         res.status(500).json('Server Error');
     }
 });
-
 
 // GET ALL POSTS FEED ROUTE
 app.get('/api/posts', async (req, res) => {

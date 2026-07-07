@@ -1,9 +1,10 @@
 const mongoose = require('mongoose');
+require('./User'); // Ensure the user model is loaded before defining the Post model
 
 const PostSchema = new mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'user'
+        ref: 'User'
     },
     title: {
         type: String,
@@ -18,7 +19,7 @@ const PostSchema = new mongoose.Schema({
         {
             user: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'user'
+                ref: 'User'
             }
         }
     ],
@@ -27,7 +28,7 @@ const PostSchema = new mongoose.Schema({
         {
             user: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'user'
+                ref: 'User'
             },
             username: {
                 type: String
