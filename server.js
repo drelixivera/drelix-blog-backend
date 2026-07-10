@@ -169,6 +169,20 @@ app.get('/api/posts', async (req, res) => {
     }
 });
 
+// Get all posts created by the currently logged in user
+app.get('/api/posts/me', auth, async (req, res) => {
+    try {
+        const myPosts = await Post.find({ user: req.user.id })
+            .populate('user', ['username'])
+            .sort({ createdAt: -1 });
+
+            res.json(myPosts);
+    } catch (err) {
+        console.error("Dashboard backend error:", err.message);
+        res.status(500).json({ error: "Server Error fetching user posts" });
+    }
+});
+
 // like route
 app.put('/api/posts/like/:id', auth, async (customReq, res) => {
     try {
@@ -198,7 +212,6 @@ app.put('/api/posts/like/:id', auth, async (customReq, res) => {
         await post.save();
         res.json(post.likes);
     } catch (err) {
-        console.error("Error in backend like route:", err.message);
         res.status(500).json({ error: err.message });
     }
 });
@@ -228,6 +241,69 @@ app.post('/api/posts/comment/:id', auth, async (customReq, res) => {
         console.error(err.message);
         if (err.kind === 'ObjectId') return res.status(404).json({ msg: 'Post not found' });
         res.status(500).send('Server Error');
+    }
+});
+
+// Route for deleting a post by ID
+app.delete('/api/posts/:id', auth, async (req, res) => {
+    try {
+        // This finds the post by ID
+        const post = await Post.findById(req.params.id);
+
+        // this checks if the post exists
+        if (!post) {
+            return res.status(404).json({ msg: "Post not found" });
+        }
+
+        // this checks if the currently logged in user is the owner of the post 
+        if (post.user.toString() !== req.user.id) {
+            return res.status(401).json({ msg: "User not authorized to delete this post"});
+        }
+ 
+        // this removes the post from the database
+        await post.deleteOne();
+        res.json({ msg: "Post removed successfully" });
+    } catch (err) {
+        console.error("Backend Delet error:", err.message);
+        
+        if (err.kind === 'ObjectId') {
+            return res.status(404).json({ msg: 'Post not found' });
+        }
+        res.status(500).json('Server Error');
+    }
+});
+
+// Route for editing a post by ID
+app.put('/api/posts/:id', auth, async (req, res) => {
+    try {
+        const { title, content } = req.body;
+
+        // 1. Find the post by ID
+        let post = await Post.findById(req.params.id);
+
+        if (!post) {
+            return res.status(404).json({ msg: 'Post not found' });
+        }
+
+        // 2. Security Check: Does the logged-in user own this post?
+        if (post.user.toString() !== req.user.id) {
+            return res.status(401).json({ msg: 'User not authorized to update this post' });
+        }
+
+        // 3. Update the fields if they were provided in the request body
+        if (title) post.title = title;
+        if (content) post.content = content;
+
+        // 4. Save the updated document back to MongoDB
+        await post.save();
+
+        res.json(post);
+    } catch (err) {
+        console.error("Backend Edit Error:", err.message);
+        if (err.kind === 'ObjectId') {
+            return res.status(404).json({ msg: 'Post not found' });
+        }
+        res.status(500).json('Server Error');
     }
 });
 

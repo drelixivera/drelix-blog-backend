@@ -13,7 +13,7 @@ module.exports = function (req, res, next) {
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        console.log("=== RAW BACKEND JWT PAYLOAD ===", decoded);
+        //console.log("=== RAW BACKEND JWT PAYLOAD ===", decoded);
 
         req.user = decoded.user || decoded;
 
